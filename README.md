@@ -1,4 +1,4 @@
 # library_management
 
-Library Management repo
+Library Management repo.
 This file get updated regularly.
