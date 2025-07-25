@@ -9,14 +9,35 @@ def view_available_books():
         print("There are no available books.Please come again another time!")
 
 def borrow_books():
+    if len(available_books) == 0:
+        print("There are no available books.Please come again another time!") 
     x = input("What is your name? ")
     print(available_books)
     y = input("What book do you want to borrow? ")
     z = 0
-    books.append(y)
     for book in available_books:
         if book == y:
-            borrowed_books.update({x : books})
+            if len(borrowed_books.keys()) > 0:
+                for names in borrowed_books.keys():
+                    if names == x:
+                        books = []
+                        books.append(borrowed_books[x])
+                        books.append(y)
+                        borrowed_books.update({x : books})
+                        break
+                    else:
+                        books = []
+                        books.append(y)
+                        print(books)
+                        borrowed_books[x] = books
+                        break
+            else:
+                books = []
+                books.append(y)
+                print(books)
+                borrowed_books[x] = books
+
+                
             z = 1
             print("The book has been borrowed")
             print(borrowed_books)
@@ -27,6 +48,9 @@ def borrow_books():
 
 def view_borrowed_books():
     name = input("What is your name? ")
+    for book in borrowed_books[name]:
+        books = ""
+        books = book + books
     print(f"These are the books you have borrowed {borrowed_books[name]}")
 
 def return_books():
