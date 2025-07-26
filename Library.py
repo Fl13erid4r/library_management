@@ -1,6 +1,21 @@
 # library_management
+import csv
+
 available_books = ["harry potter", "1984", "to kill a mockingbird"]
 borrowed_books = {}
+
+def load_books():
+    with open('books.csv', mode='r', newline='') as file:
+        reader = csv.DictReader(file)
+        return list(reader)
+    print("Books loaded from CSV:")
+
+def save_books(books):
+    with open('books.csv', mode='w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=['title', 'availability', 'borrowed_by'])
+        writer.writeheader()
+        writer.writerows(books)
+    print("Books saved to CSV.")
 
 def view_available_books():
     if len(available_books) == 0:
@@ -80,4 +95,16 @@ def main():
         else:
             print("Please Choose a valid option.")
 
-main()
+#main()
+
+data = [
+    {"title": "harry potter", "availability": True, "borrowed_by": ""},
+    {"title": "1984", "availability": True, "borrowed_by": ""},
+    {"title": "to kill a mockingbird", "availability": True, "borrowed_by": ""}
+]
+
+save_books(data)
+
+loaded_books = load_books()
+print("Loaded books:", loaded_books)
+
