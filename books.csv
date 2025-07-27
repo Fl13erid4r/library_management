@@ -1,4 +1,5 @@
-title,availability,borrowed_by
-harry potter,True,
-1984,True,
-to kill a mockingbird,True,
+title,availability,borrowed_by,author,published_year,genre
+harry potter,True,,J.K.Rowling,1997,Fantasy
+1984,True,,George Orwell,1949,Dystopian
+to kill a mockingbird,True,,Harper Lee,1960,Fiction
+rooftoppers,True,,Katherine Rundell,2013,Adventure

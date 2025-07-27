@@ -1,110 +1,147 @@
 # library_management
 import csv
 
-available_books = ["harry potter", "1984", "to kill a mockingbird"]
-borrowed_books = {}
+
 
 def load_books():
     with open('books.csv', mode='r', newline='') as file:
         reader = csv.DictReader(file)
-        return list(reader)
-    print("Books loaded from CSV:")
+        books = list(reader)
+    return books
 
 def save_books(books):
     with open('books.csv', mode='w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=['title', 'availability', 'borrowed_by'])
+        writer = csv.DictWriter(file, fieldnames=['title', 'availability', 'borrowed_by' ,'author',"published_year",'genre'])
         writer.writeheader()
-        writer.writerows(books)
-    print("Books saved to CSV.")
+        # Convert non-string fields to strings before writing
+        for book in books:
+            book_copy = book.copy()
+            book_copy['availability'] = str(book_copy['availability'])
+            book_copy['published_year'] = str(book_copy['published_year'])
+            writer.writerow(book_copy)
 
-def view_available_books():
-    if len(available_books) == 0:
+data = [
+    {'title': 'harry potter', 'availability': True, 'borrowed_by': '', 'author': 'J.K.Rowling', 'published_year': 1997, 'genre': 'Fantasy'},
+    {'title': '1984', 'availability': False, 'borrowed_by': 'Rutwik', 'author': 'George Orwell', 'published_year': 1949, 'genre': 'Dystopian'},
+    {'title': 'to kill a mockingbird', 'availability': True, 'borrowed_by': '', 'author': 'Harper Lee', 'published_year': 1960, 'genre': 'Thriller'},
+    {'title': 'the great gatsby', 'availability': True, 'borrowed_by': '', 'author': 'F. Scott Fitzgerald', 'published_year': 1925, 'genre': 'Classic'}
+]
+
+save_books(data)
+
+def view_available_books(books):
+    available = [book['title'] for book in books if book['availability'] == 'True' or book['availability'] == True]
+    if not available:
         print("There are no available books. Please come again another time!")
     else:
         print("Available books:")
-        for book in available_books:
+        for book in available:
             print(book)
-
-def borrow_books():
-    if len(available_books) == 0:
+def borrow_books(books):
+    available = [book for book in books if book['availability'] == 'True' or book['availability'] == True]
+    if not available:
         print("There are no available books. Please come again another time!")
         return
     borrower_name = input("What is your name? ")
-    print("Available books:", available_books)
-    book = input("What book do you want to borrow? ")
-    if book in available_books:
-        borrowed_books.setdefault(borrower_name, [])
-        borrowed_books[borrower_name].append(book)
-        available_books.remove(book)
-        print("The book has been borrowed.")
-    else:
-        print("We do not have that book.")
-
-def view_borrowed_books():
+    print("Available books:", [book['title'] for book in available])
+    book_title = input("What book do you want to borrow? ")
+    for book in books:
+        if book['title'].lower() == book_title.lower() and (book['availability'] == 'True' or book['availability'] == True):
+            book['availability'] = False
+            book['borrowed_by'] = borrower_name
+            print("The book has been borrowed.")
+            save_books(books)
+            return
+def view_borrowed_books(books):
     name = input("What is your name? ")
-    if name in borrowed_books and borrowed_books[name]:
+    borrowed = [book['title'] for book in books if book['borrowed_by'].lower() == name.lower()]
+    if borrowed:
         print(f"These are the books you have borrowed, {name}:")
-        for book in borrowed_books[name]:
+        for book in borrowed:
             print(book)
     else:
         print("You have not borrowed any books.")
-
-def return_books():
+def return_books(books):
     name = input("What is your name? ")
-    if name not in borrowed_books or not borrowed_books[name]:
+    borrowed = [book for book in books if book['borrowed_by'].lower() == name.lower()]
+    if not borrowed:
         print("You have not borrowed any books.")
         return
     print(f"These are the books you have borrowed, {name}:")
-    for book in borrowed_books[name]:
-        print(book)
+    for book in borrowed:
+        print(book['title'])
     book_remove = input("What book would you like to return? ")
-    if book_remove in borrowed_books[name]:
-        borrowed_books[name].remove(book_remove)
-        available_books.append(book_remove)
-        print("Your book has been returned.")
-        # Remove the user from borrowed_books if they have no books left
-        if not borrowed_books[name]:
-            del borrowed_books[name]
-    else:
-        print("You did not borrow that book.")
-
+    for book in borrowed:
+        if book['title'].lower() == book_remove.lower():
+            book['availability'] = True
+            book['borrowed_by'] = ""
+            print("Your book has been returned.")
+            save_books(books)
+            return
+    print("You did not borrow that book.")
+def donate_books(books):
+    title = input("What is the title of the book you want to donate? ")
+    author = input("Who is the author of the book? ")
+    published_year = input("What year was the book published? ")
+    genre = input("What is the genre of the book? ")
+    new_book = {
+        'title': title,
+        'availability': True,
+        'borrowed_by': '',
+        'author': author,
+        'published_year': published_year,
+        'genre': genre
+    }
+    books.append(new_book)
+    save_books(books)
+    print(f"Thank you for donating {title}!")
+def view_book_info(books):
+    title = input("Enter the title of the book you want to view: ")
+    for book in books:
+        if book['title'].lower() == title.lower():
+            print(f"Title: {book['title']}")
+            print(f"Author: {book['author']}")
+            print(f"Published Year: {book['published_year']}")
+            print(f"Genre: {book['genre']}")
+            print(f"Availability: {'Available' if book['availability'] == 'True' or book['availability'] == True else 'Not Available'}")
+            return
+    print("Book not found.")
 def main():
+    books = load_books()
     x = 0
-    while x != 5:
+    while x != 7:
         print("--------Library Menu--------")
         print("1 : View Available Books")
         print("2 : Borrow a Book")
         print("3 : View Borrowed Books")
         print("4 : Return a Book")
-        print("5 : Exit Library Menu")
+        print("5 : Donate a Book")
+        print("6 : View Book Information")
+        print("7 : Exit Library Menu")
         try:
-            x = int(input("Enter 1,2,3,4 or 5 : "))
+            x = int(input("Enter 1,2,3,4,5,6 or 7 : "))
         except ValueError:
             print("Please enter a valid number.")
             continue
         if x == 1:
-            view_available_books()
+            view_available_books(books)
         elif x == 2:
-            borrow_books()
+            borrow_books(books)
         elif x == 3:
-            view_borrowed_books()
+            view_borrowed_books(books)
         elif x == 4:
-            return_books()
+            return_books(books)
         elif x == 5:
+            donate_books(books)
+        elif x == 6:
+            view_book_info(books)
+        elif x == 7:    
             print("Thanks for Coming! See you soon!")
+            break
         else:
             print("Please Choose a valid option.")
 
-#main()
 
-data = [
-    {"title": "harry potter", "availability": True, "borrowed_by": ""},
-    {"title": "1984", "availability": True, "borrowed_by": ""},
-    {"title": "to kill a mockingbird", "availability": True, "borrowed_by": ""}
-]
 
-save_books(data)
-
-loaded_books = load_books()
-print("Loaded books:", loaded_books)
+main()
 
