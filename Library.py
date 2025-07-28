@@ -1,7 +1,6 @@
 # library_management
+
 import csv
-
-
 
 def load_books():
     with open('books.csv', mode='r', newline='') as file:
@@ -24,19 +23,18 @@ data = [
     {'title': 'harry potter', 'availability': True, 'borrowed_by': '', 'author': 'J.K.Rowling', 'published_year': 1997, 'genre': 'Fantasy'},
     {'title': '1984', 'availability': False, 'borrowed_by': 'Rutwik', 'author': 'George Orwell', 'published_year': 1949, 'genre': 'Dystopian'},
     {'title': 'to kill a mockingbird', 'availability': True, 'borrowed_by': '', 'author': 'Harper Lee', 'published_year': 1960, 'genre': 'Thriller'},
-    {'title': 'the great gatsby', 'availability': True, 'borrowed_by': '', 'author': 'F. Scott Fitzgerald', 'published_year': 1925, 'genre': 'Classic'}
 ]
-
-save_books(data)
+#save_books(data)
 
 def view_available_books(books):
-    available = [book['title'] for book in books if book['availability'] == 'True' or book['availability'] == True]
+    available = [book['title'] for book in books if str(book['availability']).lower() == 'true']
     if not available:
         print("There are no available books. Please come again another time!")
     else:
         print("Available books:")
         for book in available:
             print(book)
+
 def borrow_books(books):
     available = [book for book in books if book['availability'] == 'True' or book['availability'] == True]
     if not available:
@@ -52,6 +50,7 @@ def borrow_books(books):
             print("The book has been borrowed.")
             save_books(books)
             return
+
 def view_borrowed_books(books):
     name = input("What is your name? ")
     borrowed = [book['title'] for book in books if book['borrowed_by'].lower() == name.lower()]
@@ -61,6 +60,7 @@ def view_borrowed_books(books):
             print(book)
     else:
         print("You have not borrowed any books.")
+
 def return_books(books):
     name = input("What is your name? ")
     borrowed = [book for book in books if book['borrowed_by'].lower() == name.lower()]
@@ -79,6 +79,7 @@ def return_books(books):
             save_books(books)
             return
     print("You did not borrow that book.")
+
 def donate_books(books):
     title = input("What is the title of the book you want to donate? ")
     author = input("Who is the author of the book? ")
@@ -95,6 +96,7 @@ def donate_books(books):
     books.append(new_book)
     save_books(books)
     print(f"Thank you for donating {title}!")
+
 def view_book_info(books):
     title = input("Enter the title of the book you want to view: ")
     for book in books:
@@ -106,6 +108,7 @@ def view_book_info(books):
             print(f"Availability: {'Available' if book['availability'] == 'True' or book['availability'] == True else 'Not Available'}")
             return
     print("Book not found.")
+
 def main():
     books = load_books()
     x = 0
@@ -141,7 +144,4 @@ def main():
         else:
             print("Please Choose a valid option.")
 
-
-
 main()
-
