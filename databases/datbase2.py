@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, Boolean, String, JSON
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
-    # # "postgresql://your_user:your_password@localhost:5432/your_db"
+from sqlalchemy.orm import declarative_base, sessionmaker
+
 DATABASE_URL = "postgresql://postgres:password@localhost:5432/library"
 
 engine = create_engine(DATABASE_URL)
@@ -9,7 +9,6 @@ Base = declarative_base()
 
 class Book(Base):
     __tablename__ = 'books'
-       
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     author = Column(String, index=True)
@@ -29,7 +28,7 @@ class Book(Base):
             "borrowed_by": self.borrowed_by,
             "availablity": self.availablity,
             "copies": self.copies
-            }
+        }
 
 class User(Base):
     __tablename__ = 'users'
@@ -43,24 +42,25 @@ class User(Base):
 
     def to_dict(self):
         return {
-            "id": self.id,
-            "name": self.name,
-            "gmail": self.gmail,
-            "books_currently_borrowed": self.books_currently_borrowed,
-            "total_loans": self.total_loans,
-            "books_being_borrowed": self.books_being_borrowed
+            "id": self.Id,
+            "name": self.Name,
+            "gmail": self.Gmail,
+            "books_currently_borrowed": self.Books_currently_borrowed,
+            "total_loans": self.Total_loans,
+            "books_being_borrowed": self.Books_being_borrowed
         }
 
 Base.metadata.create_all(bind=engine)
 
 def enter():
-    input=input("Enter 1 to log in or 2 to sign up: ")
-    if input==1:
-        log_in()
-    elif input==2:
-        sign_up()
+    choice = input("Enter 1 to log in or 2 to sign up: ")
+    if choice == "1":
+        return log_in()
+    elif choice == "2":
+        return sign_up()
     else:
         print("Invalid input")
+        return None
 
 def log_in():
     name = input("Enter your name: ")
@@ -69,11 +69,14 @@ def log_in():
     user = db.query(User).filter(User.Name == name).first()
     if user:
         if user.Password == password:
-            return{"":"Welcome to the "}
+            print(f"Welcome {name} to the Library")
+            return name
         else:
-            return {"message": "incorrect password"}
+            print("Incorrect password")
+            return None
     else:
-        return {"message": "user not found"}
+        print("User not found")
+        return None
 
 def sign_up():
     name = input("Enter your name: ")
@@ -82,170 +85,186 @@ def sign_up():
     db = SessionLocal()
     user = db.query(User).filter(User.Name == name).first()
     if user:
-        return {"message": "user already exists"}
+        print("User already exists")
+        return None
     else:
         user = User(Name=name, Gmail=gmail, Password=password)
         db.add(user)
         db.commit()
-        return {"message": "user created successfully"}
+        print("User created successfully")
+        return name
 
 def available_books():
     db = SessionLocal()
     books = db.query(Book).filter(Book.availablity == True).all()
-    return [book.to_dict() for book in books]
+    if books:
+        for book in books:
+            print(book.to_dict())
+    else:
+        print("No available books")
 
-def borrow_book():
-    book = input("Enter the book title: ")
-    user = input("Enter your name: ")
+def borrow_book(username):
+    book_title = input("Enter the book title: ")
     db = SessionLocal()
-    book = db.query(Book).filter(Book.title == book).first()
+    book = db.query(Book).filter(Book.title == book_title).first()
     if book:
         if book.availablity:
             book.copies -= 1
             if book.copies == 0:
                 book.availablity = False
-            book.borrowed_by.append(user)
+            borrowed_by = book.borrowed_by or []
+            borrowed_by.append(username)
+            book.borrowed_by = borrowed_by
             db.commit()
-            user = db.query(User).filter(User.name == user).first()
+
+            user = db.query(User).filter(User.Name == username).first()
             if user:
-                user.books_currently_borrowed += 1
-                user.books_being_borrowed.append(book.title)
-                user.total_loans += 1
+                user.Books_currently_borrowed += 1
+                books_being_borrowed = user.Books_being_borrowed or []
+                books_being_borrowed.append(book.title)
+                user.Books_being_borrowed = books_being_borrowed
+                user.Total_loans += 1
                 db.commit()
+                print("Book borrowed successfully")
             else:
-                user = User(name=user, gmail="")
-                db.add(user)
-                db.commit()
-            return {"message": "book borrowed successfully"}
-        return {"message": "book not available"}
-    return {"message": "book not found"}
-
-def view_loans():
-    pass
-    user = input("Enter your name: ")
-    db = SessionLocal()
-    user = db.query(User).filter(User.name == user).first()
-    if user:
-        return user.books_being_borrowed
+                print("User not found")
+        else:
+            print("Book not available")
     else:
-        return {"message": "user not found"}
+        print("Book not found")
 
-def return_book():
-    book = input("Enter the book title: ")
-    user = input("Enter your name: ")
+def return_book(username):
+    book_title = input("Enter the book title: ")
     db = SessionLocal()
-    book = db.query(Book).filter(Book.title == book).first()
+    book = db.query(Book).filter(Book.title == book_title).first()
     if book:
-        if user in book.borrowed_by:
-            book.borrowed_by.remove(user)
+        borrowed_by = book.borrowed_by or []
+        if username in borrowed_by:
+            borrowed_by.remove(username)
+            book.borrowed_by = borrowed_by
             book.copies += 1
             if book.copies > 0:
                 book.availablity = True
             db.commit()
-            user = db.query(User).filter(User.name == user).first()
+
+            user = db.query(User).filter(User.Name == username).first()
             if user:
-                user.books_currently_borrowed -= 1
-                user.books_being_borrowed.remove(book.title)
+                user.Books_currently_borrowed -= 1
+                books_being_borrowed = user.Books_being_borrowed or []
+                if book.title in books_being_borrowed:
+                    books_being_borrowed.remove(book.title)
+                user.Books_being_borrowed = books_being_borrowed
                 db.commit()
-                return {"message": "book returned successfully"}
+                print("Book returned successfully")
             else:
-                return {"message": "user not found"}
+                print("User not found")
         else:
-            return {"message": "user did not borrow this book"}
+            print("You did not borrow this book")
     else:
-        return {"message": "book not found"}
+        print("Book not found")
 
-def book_info():
-    book = input("Enter the book title: ")
+def view_loans(username):
     db = SessionLocal()
-    book = db.query(Book).filter(Book.title == book).first()
-    if book:
-        return book.to_dict()
-    else:
-        return {"message": "book not found"}
-
-def user_info():
-    user = input("Enter your name: ")
-    db = SessionLocal()
-    user = db.query(User).filter(User.name == user).first()
+    user = db.query(User).filter(User.Name == username).first()
     if user:
-        return user.__dict__
+        books = user.Books_being_borrowed or []
+        if books:
+            print("Your borrowed books:")
+            for book in books:
+                print(f"- {book}")
+        else:
+            print("You have no borrowed books")
     else:
-        return {"message": "user not found"}
+        print("User not found")
 
 def donate_book():
-    book = input("Enter the book title: ")
+    book_title = input("Enter the book title: ")
     author = input("Enter the author name: ")
-    published = input("Enter the published year: ")
+    published = int(input("Enter the published year: "))
     genre = input("Enter the genre: ")
-    copies = input("Enter the number of copies: ")
+    copies = int(input("Enter the number of copies: "))
     db = SessionLocal()
-    book = Book(title=book, author=author, published=published, genre=genre, copies=copies)
+    book = Book(title=book_title, author=author, published=published, genre=genre, copies=copies)
     db.add(book)
     db.commit()
-    return {"message": "book donated successfully"}
+    print("Book donated successfully")
 
-def change_details():
-    user = input("Enter your name: ")
-    password = input("Enter your original password: ")
+def book_info():
+    book_title = input("Enter the book title: ")
     db = SessionLocal()
-    user = db.query(User).filter(User.name == user).first()
-    if user:
-        if user.password == password:
-            name = input("Enter your name: ")
-            gmail = input("Enter your gmail: ")
-            password = input("Enter your password: ")
-            user.name = name
-            user.gmail = gmail
-            user.password = password
-            db.commit()
-            return {"message": "user details changed successfully"}
-        else:
-            return {"message": "incorrect password"}
-    else:
-        return {"message": "user not found"}
-
-def update_book():
-    book = input("Enter the book title: ")
-    db = SessionLocal()
-    book = db.query(Book).filter(Book.title == book).first()
+    book = db.query(Book).filter(Book.title == book_title).first()
     if book:
-        title = input("Enter the book title: ")
-        author = input("Enter the author name: ")
-        published = input("Enter the published year: ")
-        genre = input("Enter the genre: ")
-        copies = input("Enter the number of copies: ")
-        book.title = title
-        book.author = author
-        book.published = published
-        book.genre = genre
-        book.copies = copies
-        db.commit()
-        return {"message": "book updated successfully"}
+        print(book.to_dict())
     else:
-        return {"message": "book not found"}
+        print("Book not found")
+
+def user_info(username):
+    db = SessionLocal()
+    user = db.query(User).filter(User.Name == username).first()
+    if user:
+        print(user.to_dict())
+    else:
+        print("User not found")
+
+def change_details(username):
+    db = SessionLocal()
+    user = db.query(User).filter(User.Name == username).first()
+    if user:
+        password = input("Enter your original password: ")
+        if user.Password == password:
+            new_name = input("Enter your new name: ")
+            new_gmail = input("Enter your new gmail: ")
+            new_password = input("Enter your new password: ")
+            user.Name = new_name
+            user.Gmail = new_gmail
+            user.Password = new_password
+            db.commit()
+            print("User details changed successfully")
+        else:
+            print("Incorrect password")
+    else:
+        print("User not found")
 
 def add_new_book():
     title = input("Enter the book title: ")
     author = input("Enter the author name: ")
-    published = input("Enter the published year: ")
+    published = int(input("Enter the published year: "))
     genre = input("Enter the genre: ")
-    copies = input("Enter the number of copies: ")
+    copies = int(input("Enter the number of copies: "))
     db = SessionLocal()
     book = Book(title=title, author=author, published=published, genre=genre, copies=copies)
     db.add(book)
     db.commit()
-    return {"message": "book added successfully"}
+    print("Book added successfully")
+
+def update_book():
+    book_title = input("Enter the book title to update: ")
+    db = SessionLocal()
+    book = db.query(Book).filter(Book.title == book_title).first()
+    if book:
+        new_title = input("Enter the new book title: ")
+        new_author = input("Enter the new author name: ")
+        new_published = int(input("Enter the new published year: "))
+        new_genre = input("Enter the new genre: ")
+        new_copies = int(input("Enter the new number of copies: "))
+        book.title = new_title
+        book.author = new_author
+        book.published = new_published
+        book.genre = new_genre
+        book.copies = new_copies
+        book.availablity = new_copies > 0
+        db.commit()
+        print("Book updated successfully")
+    else:
+        print("Book not found")
 
 def delete_book():
-    book = input("Enter the book title: ")
+    book_title = input("Enter the book title to delete: ")
     db = SessionLocal()
-    book = db.query(Book).filter(Book.title == book).first()
+    book = db.query(Book).filter(Book.title == book_title).first()
     if book:
         db.delete(book)
         db.commit()
-        return {"message": "book deleted successfully"}
+        print("Book deleted successfully")
     else:
-        return {"message": "book not found"}
-
-
+        print("Book not found")
