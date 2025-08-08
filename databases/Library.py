@@ -43,12 +43,12 @@ def user(username):
 
 def admin():
     while True:
-        print("\nAdmin Menu:")
+        print("\nAdmin Menu:\n")
         print("1. Add a new book")
         print("2. Update a book")
         print("3. Delete a book")
         print("4. View all books")
-        print("5. Exit")
+        print("5. Exit\n")
 
         choice = input("Enter your choice: ")
         if not choice.isdigit():
@@ -85,5 +85,6 @@ def run():
     datbase2.close_db()
 
 if __name__ == "__main__":
+    print("Welcome to the Library")
     run()
 

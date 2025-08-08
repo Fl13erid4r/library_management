@@ -32,22 +32,23 @@ class Book(Base):
 
 class User(Base):
     __tablename__ = 'users'
-    Id = Column(Integer, primary_key=True, index=True)
-    Name = Column(String, index=True)
-    Gmail = Column(String, index=True)
-    Password = Column(String, index=True)
-    Books_currently_borrowed = Column(Integer, default=0)
-    Total_loans = Column(Integer, default=0)
-    Books_being_borrowed = Column(JSON, default=list)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    gmail = Column(String, index=True)
+    password = Column(String, index=True)
+    books_currently_borrowed = Column(Integer, default=0)
+    total_loans = Column(Integer, default=0)
+    books_being_borrowed = Column(JSON, default=list)
 
     def to_dict(self):
         return {
-            "id": self.Id,
-            "name": self.Name,
-            "gmail": self.Gmail,
-            "books_currently_borrowed": self.Books_currently_borrowed,
-            "total_loans": self.Total_loans,
-            "books_being_borrowed": self.Books_being_borrowed
+            "id": self.id,
+            "name": self.name,
+            "gmail": self.gmail,
+            "password": self.password,
+            "number_of_books_currently_borrowed": self.books_currently_borrowed,
+            "number_of_total_loans": self.total_loans,
+            "books_being_borrowed": self.books_being_borrowed
         }
 
 Base.metadata.create_all(bind=engine)
@@ -66,10 +67,10 @@ def log_in():
     name = input("Enter your name: ")
     password = input("Enter your password: ")
     db = SessionLocal()
-    user = db.query(User).filter(User.Name == name).first()
+    user = db.query(User).filter(User.name == name).first()
     if user:
-        if user.Password == password:
-            print(f"Welcome {name} to the Library")
+        if user.password == password:
+            print(f"\nWelcome {name} to the Library")
             return name
         else:
             print("Incorrect password")
@@ -83,7 +84,7 @@ def sign_up():
     gmail = input("Enter your gmail: ")
     password = input("Enter your password: ")
     db = SessionLocal()
-    user = db.query(User).filter(User.Name == name).first()
+    user = db.query(User).filter(User.name == name).first()
     if user:
         print("User already exists")
         return None
@@ -119,11 +120,11 @@ def borrow_book(username):
 
             user = db.query(User).filter(User.Name == username).first()
             if user:
-                user.Books_currently_borrowed += 1
-                books_being_borrowed = user.Books_being_borrowed or []
+                user.books_being_borrowed += 1
+                books_being_borrowed = user.books_being_borrowed or []
                 books_being_borrowed.append(book.title)
-                user.Books_being_borrowed = books_being_borrowed
-                user.Total_loans += 1
+                user.books_being_borrowed = books_being_borrowed
+                user.total_loans += 1
                 db.commit()
                 print("Book borrowed successfully")
             else:
@@ -149,11 +150,11 @@ def return_book(username):
 
             user = db.query(User).filter(User.Name == username).first()
             if user:
-                user.Books_currently_borrowed -= 1
-                books_being_borrowed = user.Books_being_borrowed or []
+                user.books_currently_borrowed -= 1
+                books_being_borrowed = user.books_being_borrowed or []
                 if book.title in books_being_borrowed:
                     books_being_borrowed.remove(book.title)
-                user.Books_being_borrowed = books_being_borrowed
+                user.books_being_borrowed = books_being_borrowed
                 db.commit()
                 print("Book returned successfully")
             else:
@@ -165,9 +166,9 @@ def return_book(username):
 
 def view_loans(username):
     db = SessionLocal()
-    user = db.query(User).filter(User.Name == username).first()
+    user = db.query(User).filter(User.name == username).first()
     if user:
-        books = user.Books_being_borrowed or []
+        books = user.books_being_borrowed or []
         if books:
             print("Your borrowed books:")
             for book in books:
@@ -200,7 +201,7 @@ def book_info():
 
 def user_info(username):
     db = SessionLocal()
-    user = db.query(User).filter(User.Name == username).first()
+    user = db.query(User).filter(User.name == username).first()
     if user:
         print(user.to_dict())
     else:
@@ -208,16 +209,16 @@ def user_info(username):
 
 def change_details(username):
     db = SessionLocal()
-    user = db.query(User).filter(User.Name == username).first()
+    user = db.query(User).filter(User.name == username).first()
     if user:
         password = input("Enter your original password: ")
         if user.Password == password:
             new_name = input("Enter your new name: ")
             new_gmail = input("Enter your new gmail: ")
             new_password = input("Enter your new password: ")
-            user.Name = new_name
-            user.Gmail = new_gmail
-            user.Password = new_password
+            user.name = new_name
+            user.gmail = new_gmail
+            user.password = new_password
             db.commit()
             print("User details changed successfully")
         else:
