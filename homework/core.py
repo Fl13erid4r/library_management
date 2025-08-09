@@ -4,6 +4,7 @@ import main
 from main import Book, User, lock
 from main import UserCreate, UserLogin, BookUpdate
 from typing import List
+import uvicorn
 
 app = FastAPI()
 
@@ -96,7 +97,7 @@ def view_loans(username: str, db: Session = Depends(main.get_db)):
     return {"borrowed_books": user.books_being_borrowed or []}
 
 @app.post("/books/donate")
-def donate_book(title: str, author: str, published: int, genre: str, copies: int, db: Session = Depends(database2.get_db)):
+def donate_book(title: str, author: str, published: int, genre: str, copies: int, db: Session = Depends(main.get_db)):
     with lock:
         book = Book(title=title, author=author, published=published, genre=genre, copies=copies, availablity=True)
         db.add(book)
@@ -168,3 +169,6 @@ def delete_book(book_title: str, db: Session = Depends(main.get_db)):
         db.delete(book)
         db.commit()
         return {"message": "Book deleted successfully"}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)   
